@@ -12,7 +12,8 @@
             "*": [
                 "node_modules/*"
             ]
-        }
+        },
+        "allowSyntheticDefaultImports": true
     },
     "include": [
         "src/**/*"

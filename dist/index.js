@@ -4,15 +4,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const routes_1 = require("./routes");
+dotenv_1.default.config();
 const app = express_1.default();
-const port = 8080;
-const router = express_1.default.Router();
-router.get("/", (req, res) => {
-    res.send("Hello World");
-});
-app.use('/api/', router);
+const port = process.env.PORT;
+app.use(routes_1.router);
 app.listen(port, () => {
     // tslint:disable-next-line:no-console
-    console.log(`Server started at localhost:${port}`);
+    console.log(`Server started at http://localhost:${port}`);
 });
 //# sourceMappingURL=index.js.map
