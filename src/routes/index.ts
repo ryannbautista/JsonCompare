@@ -2,46 +2,37 @@ import { Router } from "express";
 import isEqual from "lodash/isEqual"
 import difference from "lodash/difference"
 import differenceWith from "lodash/differenceWith"
+import axios from "axios"
+import { sampleJsonData, getObjectDifference } from "../common"
 
 const router = Router()
-
-const data = [
-    {
-        id: 2,
-        firstname: "clarice",
-        middlename: "domingo",
-        lastname: "bautista"
-    },
-    {
-        id: 1,
-        firstname: "ryan",
-        middlename: "villarin",
-        lastname: "bautista"
-    }
-]
-
 
 router.get("/", (req, res) => {
     res.send("Json Compare")
 })
 
-router.get("/api/select/:id", (req, res) => {
-    // return res.status(400).send('Bad request')
-    console.log('select ID')
-    const id = req.params.id
-    const selected = data.find(item => item.id === parseInt(id))
-    res.send(selected)
-})
-
-router.get("/api/compare", (req, res) => {
+router.get("/api/compare/new", (req, res) => {
     res.send("compare json")
-    const jsonString1 = '{"Name":"ABC","Work":"Programmer","State":"123"}';
-    const jsonString3 = '{"Name":"ABC","Work":"Programmer","State":"123"}';
+    const jsonString1 = '{"Name":"ABC","Work":"Programmer","State":"123","city":"qc"}';
+    const jsonString3 = '{"Name":"ABC","Work":"Programmer","tate":"124","city":"cq"}';
     // // const jsonString2 = '{"Name":"XYZ","Work":"Engineer","State":"456"}';
 
     const jsonObject1 = JSON.parse(jsonString1);
     const jsonObject3 = JSON.parse(jsonString3);
     // // const jsonObject2 = JSON.parse(jsonString2);
+
+    Object.keys(jsonObject1).reduce((result, key) => {
+        if (!jsonObject3.hasOwnProperty(key)) {
+            console.log('missing key', key)
+        // }
+        } else if (!isEqual(jsonObject1[key], jsonObject3[key])) {
+            console.log(`value not equal ${key}`, jsonObject1[key])
+            console.log(`value not equal ${key}`, jsonObject3[key])
+            // const resultKeyIndex = result.indexOf(key);
+            // result.splice(resultKeyIndex, 1);
+        }
+        return result;
+    })
 
     console.log('isEqual', isEqual(jsonObject1, jsonObject3))
 
@@ -72,6 +63,29 @@ router.get("/api/compare", (req, res) => {
     //   }
     // }
 
+})
+
+router.get("/api/compare/api", async (req, res) => {
+    await axios.all([
+        axios.get('https://pws-dev.apps.sea.preview.pcf.manulife.com/api/v3/funds/MAAA?locale=en_SG&product-line=mf'),
+        axios.get('https://pws-uat.apps.eas.pcf.manulife.com/api/v3/funds/MAAA?locale=en_SG&product-line=mf')
+      ])
+      .then(axios.spread((apiRequest1, apiRequest2) => {
+        // console.log('apiRequest1: ', apiRequest1.data);
+        // console.log('apiRequest2: ', apiRequest2.data);
+        getObjectDifference(apiRequest1.data, apiRequest2.data)
+        res.status(200).send("Request API success")
+      }))
+      .catch(err => {
+        // console.log('error', err)
+        res.status(400).send("Request API error")
+      });
+})
+
+router.get("/api/compare/:id", (req, res) => {
+    const id = req.params.id
+    const selected = sampleJsonData.find(item => item.id === parseInt(id))
+    res.send(selected)
 })
 
 
