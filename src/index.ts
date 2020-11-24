@@ -1,16 +1,15 @@
 import express from "express";
+import dotenv from "dotenv";
+import { router } from "./routes"
+
+dotenv.config()
+
 const app = express();
-const port = 8080;
+const port = process.env.PORT;
 
-const router = express.Router()
-
-router.get("/", (req, res) => {
-    res.send("Hello World")
-})
-
-app.use('/api/', router)
+app.use(router)
 
 app.listen(port, () => {
     // tslint:disable-next-line:no-console
-    console.log(`Server started at localhost:${port}`)
+    console.log(`Server started at http://localhost:${port}`)
 })
