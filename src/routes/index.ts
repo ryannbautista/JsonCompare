@@ -1,77 +1,59 @@
 import { Router } from "express";
-import isEqual from "lodash/isEqual"
-import difference from "lodash/difference"
-import differenceWith from "lodash/differenceWith"
+import axios from "axios"
+import {
+    getObjectDifference,
+    importToCSV
+} from "../common"
+import {
+    sampleJsonData,
+    sampleAPIResult1,
+    sampleAPIResult2
+} from "../common/sampleData"
+import isEmpty from 'lodash/isEmpty'
 
 const router = Router()
-
-const data = [
-    {
-        id: 2,
-        firstname: "clarice",
-        middlename: "domingo",
-        lastname: "bautista"
-    },
-    {
-        id: 1,
-        firstname: "ryan",
-        middlename: "villarin",
-        lastname: "bautista"
-    }
-]
-
 
 router.get("/", (req, res) => {
     res.send("Json Compare")
 })
 
-router.get("/api/select/:id", (req, res) => {
-    // return res.status(400).send('Bad request')
-    console.log('select ID')
-    const id = req.params.id
-    const selected = data.find(item => item.id === parseInt(id))
-    res.send(selected)
+router.get("/api/compare/local", (req, res) => {
+    try {
+        getObjectDifference(sampleAPIResult1, sampleAPIResult2)
+        res.status(200).send("Compare local data success")
+    } catch(err) {
+        res.status(500).send('Error compare local data')
+    }
 })
 
-router.get("/api/compare", (req, res) => {
-    res.send("compare json")
-    const jsonString1 = '{"Name":"ABC","Work":"Programmer","State":"123"}';
-    const jsonString3 = '{"Name":"ABC","Work":"Programmer","State":"123"}';
-    // // const jsonString2 = '{"Name":"XYZ","Work":"Engineer","State":"456"}';
+router.get("/api/compare/endpoint", async (req, res) => {
+    const url1 = String(req.query?.url1 ?? '')
+    const url2 = String(req.query?.url2 ?? '')
 
-    const jsonObject1 = JSON.parse(jsonString1);
-    const jsonObject3 = JSON.parse(jsonString3);
-    // // const jsonObject2 = JSON.parse(jsonString2);
+    if (isEmpty(url1) || isEmpty(url2)) {
+        res.status(500).send("Required url1 and url2")
+        return
+    }
+    // 'https://pws-dev.apps.sea.preview.pcf.manulife.com/api/v3/funds/MAAA?locale=en_SG&product-line=mf'
+    // 'https://pws-uat.apps.eas.pcf.manulife.com/api/v3/funds/MAAA?locale=en_SG&product-line=mf'
+    await axios.all([
+        axios.get(url1),
+        axios.get(url2)
+    ])
+    .then(axios.spread((apiRequest1, apiRequest2) => {
+        const output = getObjectDifference(apiRequest1.data, apiRequest2.data)
+        importToCSV(output)
+        res.status(200).send("Request API compare success")
+    }))
+    .catch(err => {
+        res.status(500).send("Request API error")
+    });
+})
 
-    console.log('isEqual', isEqual(jsonObject1, jsonObject3))
-
-    const keysObject1 = Object.keys(jsonObject1);
-    const keysObject2 = Object.keys(jsonObject3);
-    console.log('key difference', difference(keysObject1, keysObject2))
-    console.log('key differenceWith', differenceWith(jsonObject1, jsonObject3, isEqual))
-
-    const valuesObject1 = Object.values(jsonObject1);
-    const valuesObject2 = Object.values(jsonObject3);
-    console.log('value difference', difference(valuesObject1, valuesObject2))
-    console.log('value differenceWith', differenceWith(valuesObject1, valuesObject2, isEqual))
-
-    // const values = Object.values(jsonObject1);
-    // console.log('keys: ', keys)
-    // console.log('values: ', values)
-
-    // for (const row of keys) {
-    //     console.log('row: ', row)
-    // }
-
-    // res.send(keys)
-
-    // for (let i = 0; i < keys.length; i++) {
-    //   const key = keys[i];
-    //   if (jsonObject1[key] !== jsonObject2[key]) {
-    //     console.log(key + " value changed from '" + jsonObject1[key] + "' to '" + jsonObject2[key] + "'");
-    //   }
-    // }
-
+router.get("/api/compare/:id", (req, res) => {
+    const id = req.params.id
+    const selected = sampleJsonData.find(item => item.id === parseInt(id))
+    res.send(selected)
 })
 
 
