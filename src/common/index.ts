@@ -3,6 +3,20 @@ import isObject from "lodash/isObject"
 import fs from "fs"
 import path from "path"
 import os from "os"
+import find from "lodash/find"
+
+const searchOnJson = (key:string, value:string, jsonObject1: any, jsonObject2: any) => {
+    const search = {
+        [key] : value
+    }
+
+    const searchResult1 = find(jsonObject1, search)
+    const searchResult2 = find(jsonObject2, search)
+    const noResult = searchResult1.length < 1 || searchResult2.length < 1
+    if (noResult) return
+    const output = getObjectDifference(searchResult1, searchResult2)
+    importToCSV(output)
+}
 
 
 const importToCSV = (data:[]) => {
@@ -15,6 +29,7 @@ const importToCSV = (data:[]) => {
 
 const getObjectDifference = (jsonObject1: any, jsonObject2: any) => {
     const output: any = [];
+
     Object.keys(jsonObject1).reduce((result, key) => {
 
         if (!jsonObject2.hasOwnProperty(key)) {
@@ -29,7 +44,6 @@ const getObjectDifference = (jsonObject1: any, jsonObject2: any) => {
 
                 const nestedKeys1 = Object.keys(jsonObject1[key])
                 const nestedKeys2 = Object.keys(jsonObject2[key])
-
 
                 nestedKeys1.reduce((nestedResult, nestedKey) => {
                     if (nestedKeys2.hasOwnProperty(nestedKey)) {
@@ -73,10 +87,8 @@ const getObjectDifference = (jsonObject1: any, jsonObject2: any) => {
                             })
                             return
                         }
-                        output.push(`"${nestedKey.toUpperCase()}" key value
-                            ${nestedObject1[nestedKey]} =! ${nestedObject2[nestedKey]}`)
-                        console.log(`"${nestedKey.toUpperCase()}" key value
-                            ${nestedObject1[nestedKey]} =! ${nestedObject2[nestedKey]}`)
+                        output.push(`"${nestedKey.toUpperCase()}" key value ${nestedObject1[nestedKey]} =! ${nestedObject2[nestedKey]}`)
+                        console.log(`"${nestedKey.toUpperCase()}" key value ${nestedObject1[nestedKey]} =! ${nestedObject2[nestedKey]}`)
 
                     }
                     return nestedResult
@@ -84,11 +96,11 @@ const getObjectDifference = (jsonObject1: any, jsonObject2: any) => {
                 return
             }
             output.push(`"${key.toUpperCase()}" key value ${jsonObject1[key]} != ${jsonObject2[key]}`)
-            console.log(`"${key.toUpperCase()}" key value not equal`, jsonObject1[key])
+            console.log(`"${key.toUpperCase()}" key value ${jsonObject1[key]} != ${jsonObject2[key]}`)
         }
         return result;
     })
     return output
 }
 
-export { importToCSV, getObjectDifference }
+export { searchOnJson, importToCSV, getObjectDifference }

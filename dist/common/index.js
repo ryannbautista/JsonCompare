@@ -3,14 +3,28 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getObjectDifference = exports.importToCSV = void 0;
+exports.getObjectDifference = exports.importToCSV = exports.searchOnJson = void 0;
 const isEqual_1 = __importDefault(require("lodash/isEqual"));
 const isObject_1 = __importDefault(require("lodash/isObject"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const os_1 = __importDefault(require("os"));
+const find_1 = __importDefault(require("lodash/find"));
+const searchOnJson = (key, value, jsonObject1, jsonObject2) => {
+    const search = {
+        [key]: value
+    };
+    const searchResult1 = find_1.default(jsonObject1, search);
+    const searchResult2 = find_1.default(jsonObject2, search);
+    const noResult = searchResult1.length < 1 || searchResult2.length < 1;
+    if (noResult)
+        return;
+    const output = getObjectDifference(searchResult1, searchResult2);
+    importToCSV(output);
+};
+exports.searchOnJson = searchOnJson;
 const importToCSV = (data) => {
-    const filename = path_1.default.join(__dirname, 'output.csv');
+    const filename = path_1.default.join(__dirname, 'jsonCompareOutput.csv');
     let output = [];
     output = data;
     fs_1.default.writeFileSync(filename, output.join(os_1.default.EOL));
@@ -49,8 +63,14 @@ const getObjectDifference = (jsonObject1, jsonObject2) => {
                                     const grandGrandChildKeys1 = Object.keys(grandchildNestedObject[grandchildNestedKey]);
                                     grandGrandChildKeys1.reduce((grandGrandchildNestedResult, grandGrandchildNestedKey) => {
                                         if (!isEqual_1.default(grandGrandChildObject1[grandGrandchildNestedKey], grandGrandChildObject2[grandGrandchildNestedKey])) {
-                                            output.push(`${key.toUpperCase()} -> "${grandGrandchildNestedKey.toUpperCase()}" key value ${grandGrandChildObject1[grandGrandchildNestedKey]} != ${grandGrandChildObject2[grandGrandchildNestedKey]}`);
-                                            console.log(`${key.toUpperCase()} -> "${grandGrandchildNestedKey.toUpperCase()}" key value ${grandGrandChildObject1[grandGrandchildNestedKey]} != ${grandGrandChildObject2[grandGrandchildNestedKey]}`);
+                                            output.push(`${key.toUpperCase()} ->
+                                        "${grandGrandchildNestedKey.toUpperCase()}" key value
+                                        ${grandGrandChildObject1[grandGrandchildNestedKey]} !=
+                                        ${grandGrandChildObject2[grandGrandchildNestedKey]}`);
+                                            console.log(`${key.toUpperCase()} ->
+                                        "${grandGrandchildNestedKey.toUpperCase()}" key value
+                                        ${grandGrandChildObject1[grandGrandchildNestedKey]} !=
+                                        ${grandGrandChildObject2[grandGrandchildNestedKey]}`);
                                         }
                                         return grandGrandchildNestedResult;
                                     });
@@ -67,7 +87,7 @@ const getObjectDifference = (jsonObject1, jsonObject2) => {
                 return;
             }
             output.push(`"${key.toUpperCase()}" key value ${jsonObject1[key]} != ${jsonObject2[key]}`);
-            console.log(`"${key.toUpperCase()}" key value not equal`, jsonObject1[key]);
+            console.log(`"${key.toUpperCase()}" key value ${jsonObject1[key]} != ${jsonObject2[key]}`);
         }
         return result;
     });

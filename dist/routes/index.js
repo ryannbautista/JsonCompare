@@ -32,6 +32,22 @@ router.get("/api/compare/local", (req, res) => {
         res.status(500).send('Error compare local data');
     }
 });
+router.get("/api/compare/search", (req, res) => {
+    var _a, _b, _c, _d;
+    try {
+        const key = String((_b = (_a = req.query) === null || _a === void 0 ? void 0 : _a.key) !== null && _b !== void 0 ? _b : '');
+        const value = String((_d = (_c = req.query) === null || _c === void 0 ? void 0 : _c.value) !== null && _d !== void 0 ? _d : '');
+        if (isEmpty_1.default(key) || isEmpty_1.default(value)) {
+            res.status(500).send("Required key and value");
+            return;
+        }
+        common_1.searchOnJson(key, value, sampleData_1.fundMasterData, sampleData_1.fundMasterData2);
+        res.status(200).send("Search success");
+    }
+    catch (err) {
+        res.status(500).send('Error search');
+    }
+});
 router.get("/api/compare/endpoint", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     const url1 = String((_b = (_a = req.query) === null || _a === void 0 ? void 0 : _a.url1) !== null && _b !== void 0 ? _b : '');
